@@ -1,0 +1,94 @@
+{
+  "entities": {
+    "Subscriber": {
+      "title": "Subscriber",
+      "description": "Early access membership subscriber for Atlas Travel Club",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "Subscriber's verified contact email address",
+          "maxLength": 254
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the subscription was created"
+        },
+        "status": {
+          "type": "string",
+          "description": "Membership request status",
+          "enum": ["pending", "confirmed", "invited"]
+        },
+        "membershipTier": {
+          "type": "string",
+          "description": "Preferred club tier or wanderlust interest",
+          "maxLength": 64
+        },
+        "welcomeEmailSent": {
+          "type": "boolean",
+          "description": "Whether the welcome confirmation email has been dispatched"
+        },
+        "welcomeEmailSentAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp of the welcome confirmation dispatch"
+        },
+        "waitlistPosition": {
+          "type": "integer",
+          "description": "Sequential queue number on the waitlist"
+        }
+      },
+      "required": ["email", "createdAt", "status"]
+    },
+    "WelcomeEmail": {
+      "title": "WelcomeEmail",
+      "description": "Log of welcome confirmation email dispatched to new members",
+      "type": "object",
+      "properties": {
+        "recipientEmail": {
+          "type": "string",
+          "format": "email",
+          "description": "Target email address",
+          "maxLength": 254
+        },
+        "subject": {
+          "type": "string",
+          "description": "Subject line of the confirmation email",
+          "maxLength": 160
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Dispatch timestamp"
+        },
+        "status": {
+          "type": "string",
+          "description": "Delivery status of welcome dispatch",
+          "enum": ["queued", "sent", "delivered"]
+        },
+        "inviteCode": {
+          "type": "string",
+          "description": "Unique membership VIP preview invitation key",
+          "maxLength": 32
+        }
+      },
+      "required": ["recipientEmail", "subject", "sentAt", "status", "inviteCode"]
+    }
+  },
+  "firestore": {
+    "/subscribers/{subscriberId}": {
+      "schema": { "$ref": "#/entities/Subscriber" },
+      "description": "Collection of waitlist members for Atlas Travel Club"
+    },
+    "/welcome_emails/{emailId}": {
+      "schema": { "$ref": "#/entities/WelcomeEmail" },
+      "description": "Collection of dispatched welcome confirmation emails"
+    },
+    "/test/{docId}": {
+      "schema": "string",
+      "description": "Connectivity test document"
+    }
+  }
+}

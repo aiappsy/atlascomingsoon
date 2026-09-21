@@ -1,0 +1,6 @@
+{
+  "name": "Atlas Travel Club",
+  "description": "Private wholesale travel club bypassing OTA Rate Parity with B2B Bedbanks — saving families, nomads, and frequent voyagers 20% to 55%+ on 1M+ hotels, luxury villas, and resorts.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
