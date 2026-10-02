@@ -1,7 +1,17 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer, setDoc } from 'firebase/firestore';
-import firebaseConfig from '../../firebase-applet-config.json';
+import { getFirestore, doc, getDocFromServer, writeBatch } from 'firebase/firestore';
+import fileConfig from '../../firebase-applet-config.json';
+
+const firebaseConfig = {
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || fileConfig.projectId,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID || fileConfig.appId,
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || fileConfig.apiKey,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain,
+  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || fileConfig.firestoreDatabaseId,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId,
+};
 
 const app = initializeApp(firebaseConfig);
 // CRITICAL: Must pass firebaseConfig.firestoreDatabaseId as required by AI Studio Firebase specification
@@ -51,8 +61,8 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     operationType,
     path
   };
-  console.error('Firestore Error: ', JSON.stringify(errInfo));
-  throw new Error(JSON.stringify(errInfo));
+  console.error('Firestore Error:', JSON.stringify(errInfo));
+  throw new Error('Unable to complete registration. Please check your network and try again.');
 }
 
 export async function testConnection(): Promise<boolean> {
@@ -61,9 +71,10 @@ export async function testConnection(): Promise<boolean> {
     return true;
   } catch (error) {
     if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.error('Please check your Firebase configuration.');
+      console.warn('Firebase connection check: client is offline.');
+    } else {
+      console.warn('Firebase connection check warning:', error);
     }
-    // We catch and return false gracefully so the UI continues smoothly
     return false;
   }
 }
@@ -113,20 +124,14 @@ export async function registerSubscriber(
     inviteCode,
   };
 
-  // 1. Write subscriber to Firestore
-  const subPath = `subscribers/${subscriberId}`;
+  // Perform atomic batch write to ensure both records succeed or fail together
   try {
-    await setDoc(doc(db, 'subscribers', subscriberId), subscriberData);
+    const batch = writeBatch(db);
+    batch.set(doc(db, 'subscribers', subscriberId), subscriberData);
+    batch.set(doc(db, 'welcome_emails', emailLogId), welcomeEmailData);
+    await batch.commit();
   } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, subPath);
-  }
-
-  // 2. Write welcome email trigger record to Firestore
-  const mailPath = `welcome_emails/${emailLogId}`;
-  try {
-    await setDoc(doc(db, 'welcome_emails', emailLogId), welcomeEmailData);
-  } catch (error) {
-    handleFirestoreError(error, OperationType.CREATE, mailPath);
+    handleFirestoreError(error, OperationType.WRITE, `subscribers/${subscriberId}`);
   }
 
   return {

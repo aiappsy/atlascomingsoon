@@ -27,9 +27,8 @@ import {
   Calculator,
   RefreshCw,
   Award,
-  Gift
 } from 'lucide-react';
-import { registerSubscriber, testConnection } from './lib/firebase.ts';
+import { registerSubscriber, testConnection } from './lib/firebase';
 
 interface HeroBackground {
   id: string;
@@ -190,9 +189,24 @@ export default function App() {
 
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [isCopied, setIsCopied] = useState(false);
+  const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected'>('checking');
 
   useEffect(() => {
-    testConnection().catch(() => {});
+    let isMounted = true;
+    testConnection()
+      .then((connected) => {
+        if (isMounted) {
+          setConnectionStatus(connected ? 'connected' : 'disconnected');
+        }
+      })
+      .catch(() => {
+        if (isMounted) {
+          setConnectionStatus('disconnected');
+        }
+      });
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   const handleSelectPreset = (preset: TravelerPreset) => {
@@ -228,9 +242,9 @@ export default function App() {
     } catch (err: unknown) {
       console.error('Subscription error:', err);
       setErrorMessage(
-        err instanceof Error
-          ? `Unable to save subscription: ${err.message}`
-          : 'Unable to connect to database. Please try again.'
+        err instanceof Error && !err.message.includes('{')
+          ? err.message
+          : 'Unable to save subscription. Please check your network and try again.'
       );
     } finally {
       setIsSubmitting(false);
@@ -316,11 +330,33 @@ export default function App() {
         <div
           id="database-status-indicator"
           className="flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-mono bg-neutral-900/80 border border-neutral-800 backdrop-blur-md text-neutral-300"
-          title="Connected to Firebase Firestore"
+          title={
+            connectionStatus === 'connected'
+              ? 'Connected to Firebase Firestore'
+              : connectionStatus === 'disconnected'
+              ? 'Offline or connecting to Firestore'
+              : 'Checking Firestore connection...'
+          }
         >
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          <span className="w-2 h-2 rounded-full bg-emerald-500" />
-          <span className="hidden sm:inline">Firestore Connected</span>
+          {connectionStatus === 'connected' && (
+            <>
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
+              <span className="w-2 h-2 rounded-full bg-emerald-500" />
+              <span className="hidden sm:inline">Firestore Connected</span>
+            </>
+          )}
+          {connectionStatus === 'checking' && (
+            <>
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="hidden sm:inline text-neutral-400">Connecting...</span>
+            </>
+          )}
+          {connectionStatus === 'disconnected' && (
+            <>
+              <span className="w-2 h-2 rounded-full bg-neutral-500" />
+              <span className="hidden sm:inline text-neutral-400">Offline Ready</span>
+            </>
+          )}
         </div>
       </header>
 

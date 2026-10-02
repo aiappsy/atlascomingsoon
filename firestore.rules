@@ -59,15 +59,13 @@ service cloud.firestore {
     // Subscribers collection
     match /subscribers/{subscriberId} {
       allow create: if isValidId(subscriberId) && isValidSubscriber(incoming());
-      allow get: if isValidId(subscriberId);
-      allow list, update, delete: if false;
+      allow get, list, update, delete: if false;
     }
 
     // Dispatched Welcome confirmation emails
     match /welcome_emails/{emailId} {
       allow create: if isValidId(emailId) && isValidWelcomeEmail(incoming());
-      allow get: if isValidId(emailId);
-      allow list, update, delete: if false;
+      allow get, list, update, delete: if false;
     }
   }
 }
