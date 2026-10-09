@@ -79,6 +79,13 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
+  // Redirect /launch directly to official prelaunch
+  if (req.url === '/launch' || req.url === '/launch/' || req.url.startsWith('/launch?')) {
+    res.writeHead(302, { Location: 'https://atlaslaunch.ai.studio' });
+    res.end();
+    return;
+  }
+
   // Static File Serving
   let filePath = path.join(DIST_DIR, req.url.split('?')[0]);
   if (req.url === '/' || req.url === '/admin' || req.url.startsWith('/admin')) {
