@@ -43,7 +43,7 @@ export const Hero: React.FC<HeroProps> = ({
       <div className="relative z-10 pt-2 animate-in fade-in duration-700">
         <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-neutral-950/60 backdrop-blur-md border border-amber-400/40 text-amber-300 text-xs sm:text-sm font-medium shadow-xl shadow-black/50">
           <Sparkles className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-          <span>Direct Wholesale Hotel Rates • Zero Middleman Fees</span>
+          <span>Bedbank Wholesale Hotels &amp; Duffel NDC Flights • Zero Middleman Fees</span>
         </div>
       </div>
 
@@ -57,7 +57,7 @@ export const Hero: React.FC<HeroProps> = ({
         </h1>
 
         <p className="text-base sm:text-xl text-neutral-100 max-w-2xl mx-auto font-light leading-relaxed drop-shadow-[0_2px_12px_rgba(0,0,0,0.95)] px-4">
-          Booking.com and Expedia charge up to 45% markups just to pay for TV ads. Atlas cuts out the middlemen and gives you the secret wholesale hotel rate directly.
+          Booking.com and Expedia charge massive markups to fund retail ad campaigns. Atlas connects private members directly to wholesale bedbank inventory and Duffel NDC commercial flights at pure cost.
         </p>
 
         {/* Prominent Golden Sound Prompt (Shown whenever video is playing muted) */}
