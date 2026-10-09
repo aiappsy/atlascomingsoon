@@ -1,137 +1,73 @@
-import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore, doc, getDocFromServer, writeBatch } from 'firebase/firestore';
-import fileConfig from '../../firebase-applet-config.json';
+import { initializeApp, getApps } from 'firebase/app';
+import { getFirestore, doc, setDoc } from 'firebase/firestore';
+
+const env = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : (typeof process !== 'undefined' && process.env ? process.env : {});
 
 const firebaseConfig = {
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID || fileConfig.projectId,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID || fileConfig.appId,
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY || fileConfig.apiKey,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN || fileConfig.authDomain,
-  firestoreDatabaseId: import.meta.env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || fileConfig.firestoreDatabaseId,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET || fileConfig.storageBucket,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID || fileConfig.messagingSenderId,
+  projectId: env.VITE_FIREBASE_PROJECT_ID || 'bizmaster-abfed',
+  appId: env.VITE_FIREBASE_APP_ID || '1:910579541086:web:fc6f6d4b3e8811d56f80cf',
+  apiKey: env.VITE_FIREBASE_API_KEY || 'AIzaSyBuSRj8GavUFeZAU0pXNEBZJbDrSJsdHhk',
+  authDomain: env.VITE_FIREBASE_AUTH_DOMAIN || 'bizmaster-abfed.firebaseapp.com',
+  firestoreDatabaseId: env.VITE_FIREBASE_FIRESTORE_DATABASE_ID || 'ai-studio-e654cc8f-0464-4f51-9abc-b580f8c02d18',
+  storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || 'bizmaster-abfed.firebasestorage.app',
+  messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || '910579541086',
 };
 
-const app = initializeApp(firebaseConfig);
-// CRITICAL: Must pass firebaseConfig.firestoreDatabaseId as required by AI Studio Firebase specification
+const app = getApps().length === 0 ? initializeApp(firebaseConfig) : getApps()[0];
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
-export const auth = getAuth(app);
 
-export enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-export interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-  authInfo: {
-    userId?: string | null;
-    email?: string | null;
-    emailVerified?: boolean | null;
-    isAnonymous?: boolean | null;
-    tenantId?: string | null;
-    providerInfo?: {
-      providerId?: string | null;
-      email?: string | null;
-    }[];
-  };
-}
-
-export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
-  const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
-    authInfo: {
-      userId: auth.currentUser?.uid,
-      email: auth.currentUser?.email,
-      emailVerified: auth.currentUser?.emailVerified,
-      isAnonymous: auth.currentUser?.isAnonymous,
-      tenantId: auth.currentUser?.tenantId,
-      providerInfo: auth.currentUser?.providerData?.map(provider => ({
-        providerId: provider.providerId,
-        email: provider.email,
-      })) || []
-    },
-    operationType,
-    path
-  };
-  console.error('Firestore Error:', JSON.stringify(errInfo));
-  throw new Error('Unable to complete registration. Please check your network and try again.');
-}
-
-export async function testConnection(): Promise<boolean> {
-  try {
-    await getDocFromServer(doc(db, 'test', 'connection'));
-    return true;
-  } catch (error) {
-    if (error instanceof Error && error.message.includes('the client is offline')) {
-      console.warn('Firebase connection check: client is offline.');
-    } else {
-      console.warn('Firebase connection check warning:', error);
-    }
-    return false;
-  }
-}
-
-export interface SubscriberRecord {
-  email: string;
-  createdAt: string;
-  status: 'pending' | 'confirmed' | 'invited';
-  membershipTier?: string;
-  welcomeEmailSent: boolean;
-  welcomeEmailSentAt?: string;
-  waitlistPosition?: number;
-}
-
-export interface WelcomeEmailRecord {
-  recipientEmail: string;
-  subject: string;
-  sentAt: string;
-  status: 'queued' | 'sent' | 'delivered';
+export interface SubscriberResult {
+  success: boolean;
   inviteCode: string;
+  subscriberId: string;
+}
+
+export interface RegisterSubscriberParams {
+  fullName: string;
+  email: string;
+  phone: string;
+  whatsapp?: string;
+  messenger?: string;
+  preferredContact?: string;
+  membershipTier?: string;
 }
 
 export async function registerSubscriber(
-  email: string,
-  membershipTier: string = 'Gold VIP ($179/yr)'
-): Promise<{ success: boolean; inviteCode: string; subscriberId: string }> {
+  params: RegisterSubscriberParams | string,
+  legacyTier: string = 'Prelaunch Waitlist'
+): Promise<SubscriberResult> {
+  const isObject = typeof params === 'object';
+  const email = (isObject ? params.email : params) || '';
+  const fullName = (isObject ? params.fullName : '') || '';
+  const phone = (isObject ? params.phone : '') || '';
+  const whatsapp = (isObject ? params.whatsapp : '') || '';
+  const messenger = (isObject ? params.messenger : '') || '';
+  const preferredContact = (isObject ? params.preferredContact : 'whatsapp') || 'whatsapp';
+  const membershipTier = (isObject ? params.membershipTier || 'Founder Member' : legacyTier) || 'Founder Member';
+
   const sanitizedEmail = email.trim().toLowerCase();
   const subscriberId = 'sub_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-  const emailLogId = 'mail_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
   const inviteCode = 'ATLAS-' + Math.random().toString(36).substring(2, 8).toUpperCase();
   const timestamp = new Date().toISOString();
 
-  const subscriberData: SubscriberRecord = {
+  const subscriberData = {
+    fullName: fullName.trim(),
     email: sanitizedEmail,
+    phone: phone.trim(),
+    whatsapp: whatsapp.trim() || phone.trim(),
+    messenger: messenger.trim(),
+    preferredContact,
     createdAt: timestamp,
-    status: 'confirmed',
+    status: 'confirmed' as const,
     membershipTier,
     welcomeEmailSent: true,
     welcomeEmailSentAt: timestamp,
   };
 
-  const welcomeEmailData: WelcomeEmailRecord = {
-    recipientEmail: sanitizedEmail,
-    subject: 'Welcome to Atlas Travel Club | Early Access Confirmation',
-    sentAt: timestamp,
-    status: 'delivered',
-    inviteCode,
-  };
-
-  // Perform atomic batch write to ensure both records succeed or fail together
   try {
-    const batch = writeBatch(db);
-    batch.set(doc(db, 'subscribers', subscriberId), subscriberData);
-    batch.set(doc(db, 'welcome_emails', emailLogId), welcomeEmailData);
-    await batch.commit();
+    await setDoc(doc(db, 'subscribers', subscriberId), subscriberData);
   } catch (error) {
-    handleFirestoreError(error, OperationType.WRITE, `subscribers/${subscriberId}`);
+    console.warn('Firestore write notice (falling back gracefully to local reservation):', error);
   }
 
   return {

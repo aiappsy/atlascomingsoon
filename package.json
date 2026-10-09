@@ -1,24 +1,28 @@
 {
-  "name": "atlas-coming-soon",
+  "name": "atlasprelaunch",
   "private": true,
   "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
+    "start": "node server.js",
     "preview": "vite preview",
     "clean": "node -e \"const fs = require('fs'); fs.rmSync('dist', { recursive: true, force: true });\"",
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "dotenv": "^18.0.5",
     "firebase": "^12.19.0",
     "lucide-react": "^0.546.0",
+    "nodemailer": "^10.0.13",
     "react": "^19.0.1",
     "react-dom": "^19.0.1"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "@types/node": "^22.14.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.1",
