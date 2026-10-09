@@ -1,23 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
   Calculator,
-  Calendar,
   Clock,
   Users,
   Building,
-  TrendingDown,
   ArrowRight,
   Sparkles,
   Plane,
   Bed,
+  ShieldCheck,
   CheckCircle2,
-  RefreshCw,
+  Info,
 } from 'lucide-react';
 import {
   CurrencyCode,
   StayTierId,
+  FlightClass,
   STAY_TIERS,
-  CURRENCIES,
   calculateSavings,
   CalculationResult,
 } from '../lib/calculatorModel';
@@ -37,6 +36,8 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
   const [peopleTravelling, setPeopleTravelling] = useState<number>(2);
   const [tierId, setTierId] = useState<StayTierId>('premium');
   const [currency, setCurrency] = useState<CurrencyCode>('USD');
+  const [includeFlights, setIncludeFlights] = useState<boolean>(true);
+  const [flightClass, setFlightClass] = useState<FlightClass>('economy');
 
   // Animation pulse state when calculating
   const [isAnimating, setIsAnimating] = useState<boolean>(false);
@@ -48,16 +49,16 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
     peopleTravelling,
     tierId,
     currency,
+    includeFlights,
+    flightClass,
   });
 
   // Trigger slight visual pulse when values change
   const handleInputChange = () => {
     setIsAnimating(true);
     if (onCalculationTrigger) onCalculationTrigger();
-    setTimeout(() => setIsAnimating(false), 400);
+    setTimeout(() => setIsAnimating(false), 300);
   };
-
-  const selectedTier = STAY_TIERS.find((t) => t.id === tierId) || STAY_TIERS[1];
 
   return (
     <div
@@ -74,13 +75,13 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-400/10 border border-amber-400/30 text-amber-300 text-xs font-mono mb-2">
               <Calculator className="w-3.5 h-3.5 text-amber-400" />
-              <span>Dynamic Rate Parity Calculator</span>
+              <span>Wholesale Travel Savings Calculator</span>
             </div>
             <h2 className="font-cinzel text-2xl sm:text-3xl font-bold uppercase tracking-wide text-neutral-100">
               Your Annual Travel Savings
             </h2>
             <p className="text-xs sm:text-sm text-neutral-400 mt-1 max-w-xl">
-              Model your global journeys. Based on audited B2B bedbank wholesale inventory (25%–32% net margin difference versus public OTA retail portals).
+              Calculate what you save across wholesale hotel bedbanks and Duffel NDC commercial flights compared to public retail portals.
             </p>
           </div>
 
@@ -107,11 +108,11 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
           </div>
         </div>
 
-        {/* Accommodation Style Selector Tabs */}
-        <div className="pt-6 pb-2">
+        {/* Accommodation Style Selector */}
+        <div className="pt-6 pb-4">
           <label className="text-xs font-mono font-bold tracking-wider uppercase text-neutral-300 block mb-3 flex items-center gap-2">
             <Building className="w-4 h-4 text-amber-400" />
-            <span>1. Choose Travel Accommodation Style:</span>
+            <span>1. Hotel Accommodation Style:</span>
           </label>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
             {STAY_TIERS.map((tier) => {
@@ -126,7 +127,7 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
                   }}
                   className={`p-3.5 rounded-2xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
                     isSelected
-                      ? 'bg-amber-400/15 border-amber-400/80 shadow-lg shadow-amber-400/10 scale-[1.02]'
+                      ? 'bg-amber-400/15 border-amber-400/80 shadow-lg shadow-amber-400/10 scale-[1.01]'
                       : 'bg-neutral-900/60 border-neutral-800/90 hover:border-neutral-700 text-neutral-300'
                   }`}
                 >
@@ -153,17 +154,87 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
           </div>
         </div>
 
+        {/* Flights Option Selector */}
+        <div className="pt-2 pb-4">
+          <div className="p-4 rounded-2xl bg-neutral-900/70 border border-neutral-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-sky-400/10 border border-sky-400/30 flex items-center justify-center text-sky-300 shrink-0">
+                <Plane className="w-4 h-4" />
+              </div>
+              <div>
+                <span className="text-xs font-bold text-neutral-100 block">
+                  2. Include Duffel NDC Commercial Flights in Estimate:
+                </span>
+                <span className="text-[11px] text-neutral-400 font-mono">
+                  Direct airline net fares without retail markups or legacy booking surcharges.
+                </span>
+              </div>
+            </div>
+
+            {/* Flight Controls */}
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <button
+                type="button"
+                onClick={() => {
+                  setIncludeFlights(false);
+                  setFlightClass('none');
+                  handleInputChange();
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono transition cursor-pointer ${
+                  !includeFlights
+                    ? 'bg-neutral-800 border border-neutral-700 text-neutral-200 font-bold'
+                    : 'text-neutral-500 hover:text-neutral-300'
+                }`}
+              >
+                Hotels Only
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIncludeFlights(true);
+                  setFlightClass('economy');
+                  handleInputChange();
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono transition cursor-pointer ${
+                  includeFlights && flightClass === 'economy'
+                    ? 'bg-sky-400 text-neutral-950 font-bold shadow-md shadow-sky-400/20'
+                    : 'bg-neutral-800/80 text-neutral-300 hover:text-white'
+                }`}
+              >
+                Economy (~15% Net Save)
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIncludeFlights(true);
+                  setFlightClass('business');
+                  handleInputChange();
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-mono transition cursor-pointer ${
+                  includeFlights && flightClass === 'business'
+                    ? 'bg-amber-400 text-neutral-950 font-bold shadow-md shadow-amber-400/20'
+                    : 'bg-neutral-800/80 text-neutral-300 hover:text-white'
+                }`}
+              >
+                Business (~24% Net Save)
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 3 Main Sliders: Travels, Nights, People */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 pb-8 border-b border-neutral-800">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-2 pb-8 border-b border-neutral-800">
           {/* 1. Travels / Trips per year */}
           <div className="bg-neutral-900/60 border border-neutral-800 p-4 rounded-2xl space-y-3">
             <div className="flex items-center justify-between">
               <label htmlFor="trips-input" className="text-xs font-semibold text-neutral-200 flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-amber-400" />
-                <span>Travels per year:</span>
+                <Clock className="w-3.5 h-3.5 text-amber-400" />
+                <span>Trips per year:</span>
               </label>
               <span className="text-xs font-mono font-bold text-amber-300 px-2.5 py-1 rounded-lg bg-neutral-950 border border-neutral-800">
-                {tripsPerYear} {tripsPerYear === 1 ? 'trip' : 'trips'} / yr
+                {tripsPerYear} {tripsPerYear === 1 ? 'trip' : 'trips'}
               </span>
             </div>
 
@@ -171,7 +242,7 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
               id="trips-input"
               type="range"
               min="1"
-              max="10"
+              max="12"
               step="1"
               value={tripsPerYear}
               onChange={(e) => {
@@ -256,10 +327,10 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
             <div className="flex items-center justify-between">
               <label htmlFor="people-input" className="text-xs font-semibold text-neutral-200 flex items-center gap-1.5">
                 <Users className="w-3.5 h-3.5 text-amber-400" />
-                <span>People travelling:</span>
+                <span>Travelers:</span>
               </label>
               <span className="text-xs font-mono font-bold text-amber-300 px-2.5 py-1 rounded-lg bg-neutral-950 border border-neutral-800">
-                {peopleTravelling} {peopleTravelling === 1 ? 'person' : 'people'}
+                {peopleTravelling} {peopleTravelling === 1 ? 'traveler' : 'travelers'}
               </span>
             </div>
 
@@ -309,50 +380,59 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
         <div className="pt-8">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
             {/* Left Column: Side-by-side Comparative Bars */}
-            <div className="md:col-span-6 space-y-4">
+            <div className="md:col-span-6 space-y-3">
               <span className="text-xs font-mono uppercase tracking-wider text-neutral-400 block font-semibold">
-                Cost Breakdown for {result.totalNights} Total Nights / Year:
+                Cost Breakdown ({result.totalNights} Hotel Nights {includeFlights ? `+ ${result.totalFlightTickets} Flight Tickets` : ''}):
               </span>
 
-              {/* Public OTA Cost Bar */}
+              {/* Public Retail Cost Bar */}
               <div className="p-4 rounded-2xl bg-neutral-900/80 border border-neutral-800 flex items-center justify-between">
                 <div>
                   <span className="text-[11px] font-mono text-neutral-400 uppercase tracking-wide block">
-                    Public Portals (Expedia / Booking.com)
+                    Public Retail (Booking.com / Expedia / Public OTAs)
                   </span>
                   <div className="text-xl sm:text-2xl font-mono font-bold text-neutral-400 line-through decoration-red-400/80">
                     {result.formattedRetail}
                   </div>
                 </div>
                 <div className="text-right text-[11px] text-neutral-500 font-mono">
-                  Includes ~{result.savingsPercentage}% retail markup
+                  Includes ~{result.savingsPercentage}% markups &amp; fees
                 </div>
               </div>
 
-              {/* Atlas B2B Wholesale Cost Bar */}
+              {/* Atlas Wholesale Cost Bar */}
               <div className="p-4 rounded-2xl bg-neutral-900/90 border border-amber-400/40 flex items-center justify-between shadow-lg shadow-black/40">
                 <div>
                   <span className="text-[11px] font-mono text-amber-300 uppercase tracking-wide block font-semibold">
-                    Atlas Wholesale Member Price
+                    Atlas Member Price (Pure Net Cost)
                   </span>
                   <div className="text-xl sm:text-2xl font-mono font-bold text-emerald-400">
                     {result.formattedWholesale}
                   </div>
                 </div>
                 <div className="text-right text-xs font-mono text-amber-300 font-bold">
-                  B2B Bedbank Net
+                  Wholesale Net
                 </div>
               </div>
 
-              {/* Tangible Value Tags */}
+              {/* Detailed Breakdown Tags: Hotels vs Flights */}
               <div className="grid grid-cols-2 gap-2 text-xs pt-1">
-                <div className="p-2.5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-300 flex items-center gap-2 font-mono">
-                  <Bed className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>≈ {result.equivalentNights} Extra Free Nights</span>
+                <div className="p-2.5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-300 flex items-center justify-between font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <Bed className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span>Hotels Saved:</span>
+                  </div>
+                  <span className="text-amber-300 font-bold">{result.formattedHotelSavings}</span>
                 </div>
-                <div className="p-2.5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-300 flex items-center gap-2 font-mono">
-                  <Plane className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Covers ~{result.equivalentFlights} Flights</span>
+
+                <div className="p-2.5 rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-300 flex items-center justify-between font-mono">
+                  <div className="flex items-center gap-1.5">
+                    <Plane className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                    <span>Flights Saved:</span>
+                  </div>
+                  <span className="text-sky-300 font-bold">
+                    {includeFlights ? result.formattedFlightSavings : '$0'}
+                  </span>
                 </div>
               </div>
             </div>
@@ -378,7 +458,7 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
                 </div>
 
                 <p className="text-xs text-neutral-300 leading-relaxed pt-1">
-                  Cash kept in your account instead of paying commercial advertising markups on public hotel search engines.
+                  Pure savings kept in your bank account every year instead of paying commercial OTA markups.
                 </p>
               </div>
 
@@ -394,6 +474,50 @@ export const DynamicSavingsCalculator: React.FC<DynamicSavingsCalculatorProps> =
                   <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* The Honest Breakdown Box: How Flight Savings Work */}
+        <div className="mt-8 pt-6 border-t border-neutral-800 text-left">
+          <div className="flex items-center gap-2 mb-3">
+            <Info className="w-4 h-4 text-sky-400 shrink-0" />
+            <h4 className="text-xs sm:text-sm font-bold text-neutral-200">
+              How Flight Savings Work (The Honest Breakdown)
+            </h4>
+          </div>
+
+          <p className="text-xs text-neutral-400 leading-relaxed mb-4">
+            Airlines operate on thin overall margins, so unlike hotels (which easily save 25%–50%), flight savings are more disciplined. Here is exactly where the money is saved:
+          </p>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            <div className="p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800">
+              <span className="font-bold text-amber-300 block mb-1">1. Zero GDS Surcharges</span>
+              <p className="text-neutral-400 text-[11px] leading-relaxed">
+                Airlines add $15–$35 per ticket on public sites to cover legacy systems (Amadeus/Sabre). Through Duffel NDC, members connect directly to airline APIs without these penalty fees.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800">
+              <span className="font-bold text-sky-300 block mb-1">2. At-Cost Luggage &amp; Seats</span>
+              <p className="text-neutral-400 text-[11px] leading-relaxed">
+                Public booking sites often mark up checked baggage by 30%–50%. With Atlas, you pay the airline's direct cost—saving $30–$70 per traveler on baggage alone.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800">
+              <span className="font-bold text-emerald-300 block mb-1">3. Automated EU261 Guarantee</span>
+              <p className="text-neutral-400 text-[11px] leading-relaxed">
+                If your flight is delayed by 3+ hours or cancelled, our Duffel integration automatically monitors the flight and secures up to €600 per passenger directly into your account.
+              </p>
+            </div>
+
+            <div className="p-3.5 rounded-xl bg-neutral-900/60 border border-neutral-800">
+              <span className="font-bold text-neutral-200 block mb-1">4. Realistic Expectations</span>
+              <p className="text-neutral-400 text-[11px] leading-relaxed">
+                We believe in complete honesty: expect 8%–14% net savings on typical economy routes, and 18%–26% on long-haul business class fares.
+              </p>
             </div>
           </div>
         </div>

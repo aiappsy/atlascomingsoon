@@ -15,6 +15,7 @@ export const CURRENCIES: Record<CurrencyCode, CurrencyConfig> = {
 };
 
 export type StayTierId = 'boutique' | 'premium' | 'luxury' | 'villa';
+export type FlightClass = 'none' | 'economy' | 'business';
 
 export interface StayTier {
   id: StayTierId;
@@ -66,13 +67,18 @@ export interface CalculationInput {
   peopleTravelling: number;
   tierId: StayTierId;
   currency: CurrencyCode;
+  includeFlights?: boolean;
+  flightClass?: FlightClass;
 }
 
 export interface CalculationResult {
   totalNights: number;
+  totalFlightTickets: number;
   roomMultiplier: number;
   retailTotal: number;
   wholesaleTotal: number;
+  hotelSavings: number;
+  flightSavings: number;
   annualSavings: number;
   savingsPercentage: number;
   equivalentNights: number;
@@ -80,6 +86,8 @@ export interface CalculationResult {
   formattedRetail: string;
   formattedWholesale: string;
   formattedSavings: string;
+  formattedHotelSavings: string;
+  formattedFlightSavings: string;
 }
 
 export function getRoomMultiplier(people: number): number {
@@ -104,23 +112,55 @@ export function calculateSavings(input: CalculationInput): CalculationResult {
   const multiplier = getRoomMultiplier(input.peopleTravelling);
   const totalNights = input.tripsPerYear * input.nightsPerTrip;
 
-  const retailTotalUSD = totalNights * tier.publicRateUSD * multiplier;
-  const wholesaleTotalUSD = totalNights * tier.wholesaleRateUSD * multiplier;
-  const annualSavingsUSD = retailTotalUSD - wholesaleTotalUSD;
+  // 1. Hotel Calculations
+  const hotelRetailUSD = totalNights * tier.publicRateUSD * multiplier;
+  const hotelWholesaleUSD = totalNights * tier.wholesaleRateUSD * multiplier;
+  const hotelSavingsUSD = hotelRetailUSD - hotelWholesaleUSD;
 
+  // 2. Flight Calculations (Realistic, honest figures)
+  const flightClass = input.includeFlights !== false ? (input.flightClass || 'economy') : 'none';
+  const totalFlightTickets = flightClass !== 'none' ? input.tripsPerYear * input.peopleTravelling : 0;
+
+  let flightRetailUSD = 0;
+  let flightWholesaleUSD = 0;
+  let flightSavingsUSD = 0;
+
+  if (flightClass === 'economy') {
+    // Realistic: $480 retail (with bags/fees) vs $400 Duffel NDC net (saves $80/ticket = ~17%)
+    flightRetailUSD = totalFlightTickets * 480;
+    flightWholesaleUSD = totalFlightTickets * 400;
+    flightSavingsUSD = totalFlightTickets * 80;
+  } else if (flightClass === 'business') {
+    // Realistic: $1,950 retail vs $1,480 Duffel NDC net (saves $470/ticket = ~24%)
+    flightRetailUSD = totalFlightTickets * 1950;
+    flightWholesaleUSD = totalFlightTickets * 1480;
+    flightSavingsUSD = totalFlightTickets * 470;
+  }
+
+  // Combined Totals
+  const retailTotalUSD = hotelRetailUSD + flightRetailUSD;
+  const wholesaleTotalUSD = hotelWholesaleUSD + flightWholesaleUSD;
+  const annualSavingsUSD = hotelSavingsUSD + flightSavingsUSD;
+
+  // Converted to active currency
   const retailTotal = retailTotalUSD * curr.rateFromUSD;
   const wholesaleTotal = wholesaleTotalUSD * curr.rateFromUSD;
   const annualSavings = annualSavingsUSD * curr.rateFromUSD;
+  const hotelSavings = hotelSavingsUSD * curr.rateFromUSD;
+  const flightSavings = flightSavingsUSD * curr.rateFromUSD;
 
-  const savingsPercentage = Math.round((annualSavings / retailTotal) * 100);
+  const savingsPercentage = Math.round((annualSavings / Math.max(1, retailTotal)) * 100);
   const equivalentNights = Math.round(annualSavingsUSD / tier.wholesaleRateUSD);
-  const equivalentFlights = Math.max(1, Math.floor(annualSavingsUSD / 450));
+  const equivalentFlights = Math.max(1, Math.floor(annualSavingsUSD / 400));
 
   return {
     totalNights,
+    totalFlightTickets,
     roomMultiplier: multiplier,
     retailTotal,
     wholesaleTotal,
+    hotelSavings,
+    flightSavings,
     annualSavings,
     savingsPercentage,
     equivalentNights,
@@ -128,5 +168,7 @@ export function calculateSavings(input: CalculationInput): CalculationResult {
     formattedRetail: formatCurrencyValue(retailTotal, input.currency),
     formattedWholesale: formatCurrencyValue(wholesaleTotal, input.currency),
     formattedSavings: formatCurrencyValue(annualSavings, input.currency),
+    formattedHotelSavings: formatCurrencyValue(hotelSavings, input.currency),
+    formattedFlightSavings: formatCurrencyValue(flightSavings, input.currency),
   };
 }

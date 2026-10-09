@@ -1,5 +1,5 @@
 import React from 'react';
-import { Building2, Plane, ShieldCheck, CreditCard, Smartphone } from 'lucide-react';
+import { Building2, Plane, ShieldCheck, Users } from 'lucide-react';
 
 export const TrustPillars: React.FC = () => {
   return (
@@ -9,11 +9,11 @@ export const TrustPillars: React.FC = () => {
           The Atlas Membership Advantage
         </h3>
         <p className="text-xs sm:text-sm text-neutral-400 mt-1">
-          Wholesale bedbanks, direct airline NDC networks, and European insolvency protection.
+          Wholesale hotel bedbanks, direct airline flights, and complete European travel protection.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Pillar 1: Hotels */}
         <div className="p-5 rounded-2xl bg-neutral-950/70 border border-neutral-800/80 backdrop-blur-md text-left hover:border-amber-400/40 transition">
           <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-300 mb-3">
@@ -23,7 +23,7 @@ export const TrustPillars: React.FC = () => {
             1M+ Wholesale Hotels
           </h4>
           <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
-            Direct integration into Hotelbeds, WebBeds, and institutional inventory without public OTA markups (20%–50% net savings).
+            Direct access to institutional hotel bedbanks (Hotelbeds, WebBeds) without the 20%–50% markups charged by Booking.com and Expedia.
           </p>
         </div>
 
@@ -36,7 +36,7 @@ export const TrustPillars: React.FC = () => {
             300+ Airlines via Duffel NDC
           </h4>
           <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
-            Direct carrier connections (BA, Lufthansa, SAS, Emirates). Bypass legacy GDS retail markups with unbundled net fares and continuous pricing.
+            Direct airline API connections with carriers like British Airways, SAS, Lufthansa, and Emirates at pure net cost with zero booking fees.
           </p>
         </div>
 
@@ -49,33 +49,20 @@ export const TrustPillars: React.FC = () => {
             Duffel EU Travel Protection
           </h4>
           <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
-            Automated EU261 flight disruption compensation (up to €600 payout per passenger) plus statutory EU &amp; Norwegian RGF package travel insolvency guarantee.
+            Automated EU261 compensation up to €600 per passenger for flight delays, plus statutory European package travel insolvency protection.
           </p>
         </div>
 
-        {/* Pillar 4: Zero FX */}
+        {/* Pillar 4: 4 Family Passes */}
         <div className="p-5 rounded-2xl bg-neutral-950/70 border border-neutral-800/80 backdrop-blur-md text-left hover:border-amber-400/40 transition">
           <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-300 mb-3">
-            <CreditCard className="w-5 h-5" />
+            <Users className="w-5 h-5" />
           </div>
           <h4 className="text-sm font-semibold text-neutral-100">
-            0% Foreign FX Fees
+            4 Family &amp; Companion Passes
           </h4>
           <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
-            Atlas Visa card with real interbank exchange rates and zero foreign transaction commissions across 40+ currencies.
-          </p>
-        </div>
-
-        {/* Pillar 5: Family & eSIM */}
-        <div className="p-5 rounded-2xl bg-neutral-950/70 border border-neutral-800/80 backdrop-blur-md text-left hover:border-amber-400/40 transition sm:col-span-2 lg:col-span-2">
-          <div className="w-9 h-9 rounded-xl bg-amber-400/10 border border-amber-400/30 flex items-center justify-center text-amber-300 mb-3">
-            <Smartphone className="w-5 h-5" />
-          </div>
-          <h4 className="text-sm font-semibold text-neutral-100">
-            5G Global eSIM &amp; 4 Family Passes Included
-          </h4>
-          <p className="text-xs text-neutral-400 mt-1.5 leading-relaxed">
-            Share full wholesale access with family or companions at zero extra fee, plus instant high-speed 5G mobile roaming in 160+ countries directly on your device.
+            Share full wholesale access with your partner, family members, or travel companions at zero extra fee on your annual membership.
           </p>
         </div>
       </div>
